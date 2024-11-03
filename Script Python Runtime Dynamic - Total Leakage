@@ -1,0 +1,80 @@
+import os
+import json
+
+# Define la ruta de la carpeta que contiene los archivos JSON
+json_folder = "/content/drive/MyDrive/McPAT_json_results"
+txt_folder = "/content/drive/MyDrive/McPAT_txt_results"  # Carpeta para guardar los archivos TXT
+
+# Crea la carpeta para los archivos TXT si no existe
+os.makedirs(txt_folder, exist_ok=True)
+
+# Itera sobre todos los archivos en la carpeta JSON
+for file_name in os.listdir(json_folder):
+    if file_name.endswith('.json'):
+        json_file_path = os.path.join(json_folder, file_name)
+        txt_file_path = os.path.join(txt_folder, file_name.replace('.json', '.txt'))
+
+        try:
+            # Lee el archivo JSON
+            with open(json_file_path, 'r') as json_file:
+                content = json_file.read()
+
+            # Escribe el contenido en un archivo TXT
+            with open(txt_file_path, 'w') as txt_file:
+                txt_file.write(content)
+
+            print(f'Convertido: {file_name} a {txt_file_path}')
+        
+        except Exception as e:
+            print(f'Error al procesar {file_name}: {e}')
+
+print("Conversión completada.")
+
+import os
+import pandas as pd
+
+# Define la ruta de la carpeta que contiene los archivos TXT
+txt_folder = "/content/drive/MyDrive/McPAT_txt_results"
+
+# Inicializa una lista para almacenar los resultados
+results = []
+
+# Itera sobre todos los archivos en la carpeta TXT
+for file_name in os.listdir(txt_folder):
+    if file_name.endswith('.txt'):
+        file_path = os.path.join(txt_folder, file_name)
+
+        try:
+            # Lee el archivo TXT
+            with open(file_path, 'r') as file:
+                content = file.read()
+
+            # Busca las variables deseadas
+            total_leakage = None
+            runtime_dynamic = None
+
+            # Divide el contenido en líneas para buscar las variables
+            for line in content.splitlines():
+                if 'Total Leakage' in line:
+                    total_leakage = line.split('=')[1].strip()  # Obtiene el valor después del '='
+                elif 'Runtime Dynamic' in line:
+                    runtime_dynamic = line.split('=')[1].strip()  # Obtiene el valor después del '='
+
+            # Agrega los resultados a la lista
+            results.append({
+                'File': file_name,
+                'Total Leakage': total_leakage,
+                'Runtime Dynamic': runtime_dynamic
+            })
+        
+        except Exception as e:
+            print(f'Error al procesar {file_name}: {e}')
+
+# Crea un DataFrame a partir de los resultados
+df_results = pd.DataFrame(results)
+
+# Guarda los resultados en un archivo Excel
+output_file = '/content/drive/MyDrive/McPAT_results.xlsx'
+df_results.to_excel(output_file, index=False)
+
+print(f"Los resultados se han guardado en: {output_file}")
